@@ -1,0 +1,123 @@
+version: '3'
+
+services:
+  redis:
+    restart: always
+    image: sameersbn/redis:latest
+    command:
+      - --loglevel warning
+    volumes:
+      - /var/lib/docker/volumes/_data/redis:/var/lib/redis:Z
+
+  postgresql:
+    restart: always
+    image: postgres:latest
+    volumes:
+      - /var/lib/docker/volumes/_data/postgresql:/var/lib/postgresql:Z
+    environment:
+      POSTGRES_USER: gitlab
+      POSTGRES_PASSWORD: password
+      LANG: en_US.UTF-8
+      LC_TYPE: en_US.UTF-8
+
+  nginx_proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/lib/docker/volumes/_data/nginx/vhost.d/:/etc/nginx/vhost.d:ro
+      - /var/lib/docker/volumes/_data/nginx/certs/:/etc/nginx/certs
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /usr/share/nginx/html
+    environment:
+      - DEFALT_HOST=$HOST.fadesp.org
+
+  nginx_letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - /var/lib/docker/volumes/_data/nginx/vhost.d/:/etc/nginx/vhost.d:rw
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    environment:
+      - DEFALT_HOST=$HOST.fadesp.org
+    restart: always
+
+  gitlab:
+    restart: always
+    image: gitlab/gitlab-ce:latest
+    ports:
+      - "10080:80"
+      - "10443:443"
+      - "2222:22"
+    volumes:
+      - /var/lib/docker/volumes/_data/gitlab:/home/git/data
+    enviroment:
+      - VIRTUAL_HOST=gitlab.fadesp.org
+      - LETSENCRYPT_HOST=gitlab.fadesp.org
+      - LETSENCRYPT_EMAIL=agnaldoneto@ufpa.br
+      - TZ=America/Belem
+      - SMTP_ENABLED=true
+      - SMTP_DOMAIN=smtp.gmail.com
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=ctic-cssi@ufpaalgumacoisa.br
+      - SMTP_PASS=algumasenha
+      - SMTP_STARTTLS=true
+      - SMTP_AUTHENTICATION=login
+      - GITLAB_TIMEZONE=Brasilia
+      - GITLAB_HOST=git-cssi.ctic.ufpa.br
+      - GITLAB_HTTPS=true
+      - SSL_SELF_SIGNED=true
+      - GITLAB_SECRETS_DB_KEY_BASE=phCzJLC5wwHnQMNjtqbX6rDrJtCXscpdt2Sl6tKD8FBszvjBZgDdPlNVnRB485pf
+      - GITLAB_SECRETS_SECRET_KEY_BASE=Fq9SMgtxTzStDfXXsFh6s2qWb4QfXWv2bn45rJh3cGnRQq89BwbgQS9PQTlkM4zK
+      - GITLAB_SECRETS_OTP_KEY_BASE=64h8gDCs32wvHRzd5fNgZjhmjjpmwlf9Zk2Jdlrc32qhL7hBcnBNr6xXH3vK4mds
+      - GITLAB_SSH_PORT=2222
+      - GITLAB_EMAIL=ctic-cssi@ufpaalgumacoisa.br
+      - GITLAB_EMAIL_DISPLAY_NAME=GitLab Fadesp
+      - GITLAB_EMAIL_REPLY_TO=ctic-cssi@ufpaalgumacoisa.br
+      - GITLAB_INCOMING_EMAIL_ADDRESS=ctic-cssi@ufpaalgumacoisa.br
+      - IMAP_ENABLED=false
+      - IMAP_HOST=imap.gmail.com
+      - IMAP_PORT=993
+      - IMAP_USER=ctic-cssi@ufpaalgumacoisa.br
+      - IMAP_PASS=algumasenha
+      - IMAP_SSL=true
+      - GITLAB_PROJECTS_SNIPPETS=true
+      - GITLAB_NOTIFY_ON_BROKEN_BUILDS=true 
+      - GITLAB_BACKUPS=daily
+      - GITLAB_BACKUP_TIME=01:00
+      - GITLAB_BACKUP_EXPIRY=2592000
+      - DB_NAME=gitlab
+      - DB_USER=gitlab
+      - DB_PASS=password
+      - GITLAB_REGISTRY_ENABLED=true
+      - GITLAB_REGISTRY_HOST=registry.gitlab.mysite.fr
+      - GITLAB_REGISTRY_PORT=5500
+      - GITLAB_REGISTRY_API_URL=https://registry:5000
+      - GITLAB_REGISTRY_KEY_PATH=/certs/registry-auth.key
+      - GITLAB_REGISTRY_ISSUER=gitlab-issuer
+
+  registry:
+    restart: always
+    image: registry:2.4.1
+    ports:
+      - "5000:5000"
+    volumes:
+      - /var/lib/docker/volumes/_data/gitlab/gitlab/data/shared/registry:/registry
+      - /var/lib/docker/volumes/_data/gitlab/gitlab_registry/certs:/certs
+    environment:
+      - REGISTRY_LOG_LEVEL=info
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/registry
+      - REGISTRY_AUTH_TOKEN_REALM=http://gitlab.mysite.fr/jwt/auth
+      - REGISTRY_AUTH_TOKEN_SERVICE=container_registry
+      - REGISTRY_AUTH_TOKEN_ISSUER=gitlab-issuer
+      - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/certs/registry-auth.crt
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry-auth.crt
+      - REGISTRY_HTTP_TLS_KEY=/certs/registry-auth.key
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+
+
+
+
+
+
