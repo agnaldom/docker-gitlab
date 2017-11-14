@@ -31,7 +31,7 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - /usr/share/nginx/html
     environment:
-      - DEFALT_HOST=$HOST.fadesp.org
+      - DEFALT_HOST=icui.ufpa.br
 
   nginx_letsencrypt:
     image: jrcs/letsencrypt-nginx-proxy-companion
@@ -39,7 +39,7 @@ services:
       - /var/lib/docker/volumes/_data/nginx/vhost.d/:/etc/nginx/vhost.d:rw
       - /var/run/docker.sock:/tmp/docker.sock:ro
     environment:
-      - DEFALT_HOST=$HOST.fadesp.org
+      - DEFALT_HOST=icui.ufpa.br
     restart: always
 
   gitlab:
@@ -52,8 +52,8 @@ services:
     volumes:
       - /var/lib/docker/volumes/_data/gitlab:/home/git/data
     enviroment:
-      - VIRTUAL_HOST=gitlab.fadesp.org
-      - LETSENCRYPT_HOST=gitlab.fadesp.org
+      - VIRTUAL_HOST=gitlab.ufpa.br
+      - LETSENCRYPT_HOST=gitlab.ufpa.br
       - LETSENCRYPT_EMAIL=agnaldoneto@ufpa.br
       - TZ=America/Belem
       - SMTP_ENABLED=true
@@ -65,7 +65,7 @@ services:
       - SMTP_STARTTLS=true
       - SMTP_AUTHENTICATION=login
       - GITLAB_TIMEZONE=Brasilia
-      - GITLAB_HOST=git-cssi.ctic.ufpa.br
+      - GITLAB_HOST=gitlab.ufpa.br
       - GITLAB_HTTPS=true
       - SSL_SELF_SIGNED=true
       - GITLAB_SECRETS_DB_KEY_BASE=phCzJLC5wwHnQMNjtqbX6rDrJtCXscpdt2Sl6tKD8FBszvjBZgDdPlNVnRB485pf
@@ -73,7 +73,7 @@ services:
       - GITLAB_SECRETS_OTP_KEY_BASE=64h8gDCs32wvHRzd5fNgZjhmjjpmwlf9Zk2Jdlrc32qhL7hBcnBNr6xXH3vK4mds
       - GITLAB_SSH_PORT=2222
       - GITLAB_EMAIL=ctic-cssi@ufpaalgumacoisa.br
-      - GITLAB_EMAIL_DISPLAY_NAME=GitLab Fadesp
+      - GITLAB_EMAIL_DISPLAY_NAME=GitLab UFPA
       - GITLAB_EMAIL_REPLY_TO=ctic-cssi@ufpaalgumacoisa.br
       - GITLAB_INCOMING_EMAIL_ADDRESS=ctic-cssi@ufpaalgumacoisa.br
       - IMAP_ENABLED=false
@@ -90,8 +90,13 @@ services:
       - DB_NAME=gitlab
       - DB_USER=gitlab
       - DB_PASS=password
+      - LDAP_ENABLED=true
+      - LDAP_HOST=vatapa.ufpa.br
+      - LDAP_PORT=389
+      - LDAP_BASE=ou=Coordenadoria de Segurança e Serviços de Internet,ou=Users,ou=CTIC,o=UFPA
+      - LDAP_UID=uid
       - GITLAB_REGISTRY_ENABLED=true
-      - GITLAB_REGISTRY_HOST=registry.gitlab.mysite.fr
+      - GITLAB_REGISTRY_HOST=registry.gitlab.ufpa.br
       - GITLAB_REGISTRY_PORT=5500
       - GITLAB_REGISTRY_API_URL=https://registry:5000
       - GITLAB_REGISTRY_KEY_PATH=/certs/registry-auth.key
@@ -108,7 +113,7 @@ services:
     environment:
       - REGISTRY_LOG_LEVEL=info
       - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/registry
-      - REGISTRY_AUTH_TOKEN_REALM=http://gitlab.mysite.fr/jwt/auth
+      - REGISTRY_AUTH_TOKEN_REALM=http://gitlab.ufpa.br/jwt/auth
       - REGISTRY_AUTH_TOKEN_SERVICE=container_registry
       - REGISTRY_AUTH_TOKEN_ISSUER=gitlab-issuer
       - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/certs/registry-auth.crt
