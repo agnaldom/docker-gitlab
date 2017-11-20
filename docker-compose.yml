@@ -22,22 +22,27 @@ services:
 
   nginx_proxy:
     image: jwilder/nginx-proxy
+    restart: always
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - /var/lib/docker/volumes/_data/nginx/vhost.d/:/etc/nginx/vhost.d:ro
-      - /var/lib/docker/volumes/_data/nginx/certs/:/etc/nginx/certs
+      - /var/lib/docker/volumes/_data/nginx/certs/:/etc/nginx/certs:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - /usr/share/nginx/html
+      - /var/lib/docker/volumes/_data/nginx/html:/usr/share/nginx/html
     environment:
       - DEFALT_HOST=icui.ufpa.br
 
   nginx_letsencrypt:
     image: jrcs/letsencrypt-nginx-proxy-companion
     volumes:
-      - /var/lib/docker/volumes/_data/nginx/vhost.d/:/etc/nginx/vhost.d:rw
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /var/lib/docker/volumes/_data/nginx/certs/:/etc/nginx/certs:ro
+      - /var/lib/docker/volumes/_data/nginx/html:/usr/share/nginx/html
+      - "/var/lib/docker/volumes/_data/nginx/vhost.d/:/etc/nginx/vhost.d:rw"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    depends_on:
+      - nginx_proxy
     environment:
       - DEFALT_HOST=icui.ufpa.br
     restart: always
@@ -49,9 +54,14 @@ services:
       - "10080:80"
       - "10443:443"
       - "2222:22"
+    depends_on:
+      - redis
+      - postgresql
+    external_links:
+      - "registry:registry.gitlab.ufpa.br"
     volumes:
       - /var/lib/docker/volumes/_data/gitlab:/home/git/data
-    enviroment:
+    environment:
       - VIRTUAL_HOST=gitlab.ufpa.br
       - LETSENCRYPT_HOST=gitlab.ufpa.br
       - LETSENCRYPT_EMAIL=agnaldoneto@ufpa.br
@@ -98,7 +108,7 @@ services:
       - GITLAB_REGISTRY_ENABLED=true
       - GITLAB_REGISTRY_HOST=registry.gitlab.ufpa.br
       - GITLAB_REGISTRY_PORT=5500
-      - GITLAB_REGISTRY_API_URL=https://registry:5000
+      - GITLAB_REGISTRY_API_URL=https://registry.gitlab.ufpa.br:5000
       - GITLAB_REGISTRY_KEY_PATH=/certs/registry-auth.key
       - GITLAB_REGISTRY_ISSUER=gitlab-issuer
 
@@ -110,6 +120,8 @@ services:
     volumes:
       - /var/lib/docker/volumes/_data/gitlab/gitlab/data/shared/registry:/registry
       - /var/lib/docker/volumes/_data/gitlab/gitlab_registry/certs:/certs
+    external_links:
+      - "registry:registry.gitlab.ufpa.br"
     environment:
       - REGISTRY_LOG_LEVEL=info
       - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/registry
@@ -120,9 +132,3 @@ services:
       - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry-auth.crt
       - REGISTRY_HTTP_TLS_KEY=/certs/registry-auth.key
       - REGISTRY_STORAGE_DELETE_ENABLED=true
-
-
-
-
-
-
